@@ -1,6 +1,7 @@
 pub mod search {
-    use std::collections::{HashMap, LinkedList, HashSet};
+    use std::collections::{HashMap, LinkedList};
     use std::{fs, path, fmt, io};
+    use std::cmp::Reverse;
 
     #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
     pub struct Posting {
@@ -19,7 +20,6 @@ pub mod search {
 
         // parse documents directory
         let document_store_path = path::Path::new("documents");
-        let mut terminology: HashSet<String> = HashSet::new();
 
         if document_store_path.is_dir() {
             for entry in fs::read_dir(&document_store_path).unwrap() {
@@ -39,11 +39,8 @@ pub mod search {
                     .map(|t| t.trim().to_lowercase().trim_matches(&['.', ',']).to_string())
                     .collect();
 
-                
                 // add to Terminology
                 for term in normalized_terms.iter() {
-                    //add to terminology
-                    terminology.insert(term.to_string());
                     //store tf
                     let tf = tf_hashmap.entry(term.to_string()).or_insert(0);
                     *tf += 1;
@@ -87,14 +84,51 @@ pub mod search {
             return
         } else {
             let postings = index.get(&q).unwrap();
+            let mut postings: Vec<&Posting> = postings.iter().collect();
+            postings.sort_by_key(|posting| Reverse(posting.tf));
             for posting in postings {
                 println!(" DOCUMENT {} ({} Match(es))", 
                     posting.id,
                     posting.tf
                 );
+                println!("{}", get_snippet(&posting.id));
                 println!("-------------------------\n");
             }
         }
+    }
+
+    pub fn parse_document(id: &u32) -> String {
+        // parse documents directory
+        let path = "./documents/".to_string() + &id.to_string();
+
+        let path = path::Path::new(&path);
+
+        let content = fs::read_to_string(path).unwrap(); 
+
+        content
+    }
+
+    pub fn parse_document_to_terms(id: &u32) -> Vec<String> {
+        // parse documents directory
+        let path = "./documents/".to_string() + &id.to_string();
+
+        let path = path::Path::new(&path);
+
+        let content = fs::read_to_string(path).unwrap(); 
+
+        let terms: Vec<&str> = content.split_whitespace().collect();
+
+        let normalized_terms: Vec<String> = terms.iter()
+            .map(|t| t.trim().to_lowercase().trim_matches(&['.', ',']).to_string())
+            .collect();
+
+        normalized_terms
+    }
+
+    pub fn get_snippet(id: &u32) -> String {
+        let snippet = parse_document(id);
+        let dots = String::from("...");
+        snippet[..80].to_string() + &dots
     }
 }
 

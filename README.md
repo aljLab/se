@@ -12,11 +12,12 @@
 - the index is built before starting the session and kept in memory
 - documents in `./documents` are indexed
 - the index only stores _tf(t,d)_ in its postings
-    Index Structure:
+
+##### Index Structure:    
 ```
 {
-    t1: [(document_id, tf(t1, d))],
-    t2: [(document_id, tf(t2, d))],
+    t1: [(1, tf(t1, d1)), (2, tf(t1, d2)), (2, tf(t1, d3)), ....],
+    t2: [(2, tf(t2, d2))],
     ...
 }
 ```
